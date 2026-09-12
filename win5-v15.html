@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08733f">
+<title>WIN5 買い目決定ツール</title>
+<style>
+:root{--bg:#f4f7f5;--card:#fff;--green:#08733f;--line:#d9e5de;--text:#18231d;--muted:#6b786f;--yellow:#f8c923;--danger:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:var(--text)}
+header{background:var(--green);color:#fff;padding:22px 16px}.wrap{max-width:900px;margin:auto}.title{font-size:23px;font-weight:900}.sub{opacity:.85;margin-top:4px;font-size:13px}
+.controls{display:grid;gap:10px;margin-top:18px}.datebox{background:#fff;color:#111;border-radius:15px;padding:10px 14px;display:flex;align-items:center;gap:12px}
+.datebox label{color:#6a746e}.datebox input{border:0;background:transparent;font-size:18px;font-weight:800;width:100%;outline:none}
+button{border:0;border-radius:15px;font-weight:800;cursor:pointer}.load{background:var(--yellow);padding:15px;font-size:16px}
+.actionrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.actionrow.bottomActions{margin-top:16px}.decide{background:var(--green);color:#fff;padding:15px;font-size:17px}.show{background:#fff;color:var(--green);border:2px solid var(--green);padding:13px;font-size:17px}
+main{max-width:900px;margin:0 auto 130px;padding:16px}.status{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:12px;line-height:1.5}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.k{font-size:12px;color:var(--muted)}.v{font-size:21px;font-weight:900;margin-top:3px}.green{color:var(--green)}
+.savedInfo{margin-top:10px;background:#eaf5ef;border:1px solid #c9e6d5;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:800;color:var(--green)}
+.race{background:#fff;border:1px solid var(--line);border-radius:16px;margin-top:13px;overflow:hidden}.racehead{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
+.badge{background:var(--green);color:#fff;text-align:center;border-radius:999px;padding:7px 3px;font-size:12px;font-weight:900}.rtitle{font-weight:900}.rtitle input{width:100%;border:0;border-bottom:1px dashed #aaa;font:inherit;background:transparent}
+.count{font-size:12px;color:var(--muted)}.horses{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px}.horse input{position:absolute;opacity:0}.horse label{display:block;border:1px solid var(--line);border-radius:12px;text-align:center;padding:10px 5px}
+.horse input:checked+label{background:#e6f4ec;border-color:var(--green);box-shadow:inset 0 0 0 1px var(--green)}.no{display:block;font-size:21px;font-weight:900}.odds{font-size:11px;color:var(--muted)}
+.clearRace{margin:0 12px 12px;padding:9px 12px;color:var(--green);background:#eef5f1}.note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:15px}
+.bottom{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:20}
+.bottomin{max-width:900px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:8px}.big{font-size:21px;font-weight:900}.clearAll{padding:11px 14px;color:var(--green);background:#eef5f1}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:50;padding:20px 12px;overflow:auto}.modal.open{display:block}.sheet{max-width:760px;margin:20px auto;background:var(--bg);border-radius:20px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.sheethead{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;z-index:2}.sheettitle{font-size:20px;font-weight:900}.close{width:38px;height:38px;background:#eef2ef;font-size:22px}
+.sheetbody{padding:14px}.savedSummary{background:var(--green);color:#fff;border-radius:14px;padding:13px;margin-bottom:12px;line-height:1.6}
+.ticket{background:#fff;border:1px solid var(--line);border-radius:15px;margin-bottom:12px;overflow:hidden}.tickethead{padding:12px 13px;background:#f7faf8;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.ticketnum{font-size:18px;font-weight:900}.ticketmeta{font-size:12px;color:var(--muted)}
+.ticketbody{padding:11px 13px}.ticketRace{display:grid;grid-template-columns:76px 1fr;gap:8px;padding:7px 0;border-bottom:1px dashed #e2e8e4}.ticketRace:last-child{border-bottom:0}.ticketRaceName{font-weight:800;font-size:13px}.nums{font-weight:900}.ticketfoot{display:flex;justify-content:space-between;align-items:center;padding:11px 13px;background:#fafcfa;border-top:1px solid var(--line)}
+.ticketActions{display:flex;gap:8px;flex-wrap:wrap}.editBtn,.copyBtn,.moveBtn{padding:8px 11px;border:1px solid var(--line);background:#fff;color:var(--green)}.saveEdit{padding:10px 12px;background:var(--green);color:#fff}.cancelEdit{padding:10px 12px;background:#eef2ef;color:var(--text)}.editGrid{display:grid;gap:10px}.editRace{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}.editRaceTitle{font-weight:900;margin-bottom:8px}.editHorses{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.editHorse input{position:absolute;opacity:0}.editHorse label{display:block;text-align:center;border:1px solid var(--line);border-radius:9px;padding:8px 2px;font-weight:800}.editHorse input:checked+label{background:#e6f4ec;border-color:var(--green)}.editFooter{display:flex;gap:8px;margin-top:12px}.del{background:#fff1f0;color:var(--danger);padding:8px 11px;border:1px solid #f4c7c3}.danger{width:100%;background:#fff;color:var(--danger);border:1px solid #efb8b2;padding:12px;margin-top:4px}
+.empty{text-align:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px 16px;color:var(--muted)}
+.toTop{width:100%;margin-top:14px;padding:14px;background:#fff;color:var(--green);border:2px solid var(--green);font-size:16px}
+.loginOverlay{position:fixed;inset:0;background:linear-gradient(180deg,#08733f 0%,#0a5f37 100%);z-index:100;display:flex;align-items:center;justify-content:center;padding:22px}
+.loginCard{width:min(520px,100%);background:#fff;border-radius:22px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.loginTitle{font-size:25px;font-weight:900;color:var(--green);margin-bottom:6px}.loginSub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.loginLabel{font-size:13px;font-weight:800;margin-bottom:6px}.loginSelect,.newIdInput{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:16px;margin-bottom:10px}
+.loginBtn{width:100%;padding:14px;background:var(--green);color:#fff;font-size:17px}.lastIdBtn{width:100%;padding:14px;background:#f8c923;color:#18231d;font-size:17px;margin-bottom:10px}
+.addIdBtn{width:100%;padding:12px;background:#eef5f1;color:var(--green);margin-top:8px}
+.profileBar{max-width:900px;margin:0 auto;padding:8px 16px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}.profileRight{display:flex;align-items:center;gap:8px}.versionTag{font-size:12px;font-weight:800;color:var(--green);background:#eef5f1;padding:6px 8px;border-radius:999px}.updateBtn{padding:8px 10px;background:#fff3cd;color:#7a5b00;border:1px solid #f0d36b;border-radius:10px}.profileName{font-size:12px;color:var(--muted)}.switchId{padding:8px 10px;background:#eef5f1;color:var(--green);border-radius:10px}
+.hidden{display:none!important}
+@media(min-width:700px){.controls{grid-template-columns:1fr 260px}.horses{grid-template-columns:repeat(6,1fr)}}
+.raceTitleNav{display:flex;align-items:center;gap:8px;width:100%}.raceTitleNav input{min-width:0;flex:1}.raceNavInline{display:flex;gap:6px;flex-shrink:0}.raceNavBtn{border:1px solid #2f7d4d;background:#eef7f1;color:#21663d;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:900;line-height:1}.raceNavBtn:disabled{opacity:.35}</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="title">WIN5 買い目決定ツール</div>
+<div class="sub">対象レース・馬番選択・点数計算・買い目保存・修正・更新</div>
+<div class="controls">
+<div class="datebox"><label>対象日</label><input id="date" type="date"></div>
+<button id="load" class="load">対象5レースを表示</button>
+</div>
+</div></header>
+<div class="profileBar"><div class="profileName">使用ID：<strong id="currentProfileLabel">-</strong></div><div class="profileRight"><span class="versionTag">v15</span><button id="forceUpdate" class="updateBtn">最新版へ更新</button><button id="switchId" class="switchId">ID切替</button></div></div>
+
+<main>
+<div id="status" class="status"><strong>日付を指定して「対象5レースを表示」を押してください。</strong></div>
+<div class="summary">
+<div class="metric"><div class="k">現在の買い目点数</div><div id="points" class="v green">0点</div></div>
+<div class="metric"><div class="k">現在の購入金額</div><div id="amount" class="v">¥0</div></div>
+<div class="metric"><div class="k">選択頭数</div><div id="total" class="v">0頭</div></div>
+</div>
+<div id="savedInfo" class="savedInfo">保存済み 0口</div>
+
+<div class="actionrow">
+<button id="decide" class="decide">決定</button>
+<button id="showSaved" class="show">表示</button>
+</div>
+
+<div id="races"></div>
+
+<div class="actionrow bottomActions">
+<button id="decideBottom" class="decide">決定</button>
+<button id="showSavedBottom" class="show">表示</button>
+</div>
+<button id="toTop" class="toTop">画面の一番上に戻る</button>
+
+<div class="note">※ 5レースすべてで1頭以上選択して「決定」を押すと、1口目・2口目…として保存されます。保存後は馬番選択が自動でクリアされ、次の買い目を入力できます。<br>
+※ 各レース最大10頭まで選択できます。買い目点数は5レースの選択頭数の積です。保存データはIDごとにこの端末のSafari内に保持され、画面を閉じて再起動しても残ります。<br>
+※ JRA単勝オッズの自動取得はサーバー接続後に有効になります。未取得時は「-」表示です。</div>
+</main>
+
+<div class="bottom"><div class="bottomin">
+<div><div style="font-size:11px;color:#6b786f">現在の買い目</div><div class="big"><span id="bpoints">0</span>点 ／ ¥<span id="bamount">0</span></div></div>
+<button id="clearAll" class="clearAll">選択クリア</button>
+</div></div>
+
+<div id="loginOverlay" class="loginOverlay">
+  <div class="loginCard">
+    <div class="loginTitle">WIN5 買い目決定ツール</div><div id="loginBuildLabel" style="display:inline-block;margin:2px 0 10px;padding:5px 9px;border-radius:999px;background:#eef5f1;color:#08733f;font-weight:900;font-size:12px">v15 ホーム画面専用版</div>
+    <div class="loginSub">使用するIDを選択してください。IDごとに保存データを分けて管理します。</div>
+    <button id="lastIdBtn" class="lastIdBtn hidden">前回使用したIDで開始</button>
+    <div class="loginLabel">ID</div>
+    <select id="profileSelect" class="loginSelect"></select>
+    <button id="loginBtn" class="loginBtn">このIDで開始</button>
+    <button id="addIdBtn" class="addIdBtn">新しいIDを追加</button>
+    <button id="exportDataBtn" class="addIdBtn">保存データをコピー</button>
+    <button id="importDataBtn" class="addIdBtn">保存データを読み込む</button>
+    <div id="newIdArea" class="hidden" style="margin-top:12px">
+      <div class="loginLabel">新しいID名</div>
+      <input id="newIdInput" class="newIdInput" maxlength="30" placeholder="例：asai300">
+      <button id="saveNewId" class="loginBtn">IDを追加して開始</button>
+    </div>
+  </div>
+</div>
+
+<div id="savedModal" class="modal">
+  <div class="sheet">
+    <div class="sheethead">
+      <div class="sheettitle">保存した買い目</div>
+      <button id="closeModal" class="close">×</button>
+    </div>
+    <div id="savedBody" class="sheetbody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const isStandalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  if(isStandalone){
+    const u = new URL(location.href);
+    if(u.searchParams.get("v") !== "12"){
+      u.searchParams.set("v","13");
+      u.searchParams.set("home",Date.now().toString());
+      location.replace(u.toString());
+      return;
+    }
+  }
+})();
+
+const schedule={
+"2026-09-12":["阪神9R","中山10R","阪神10R","中山11R","阪神11R"],
+"2026-09-13":["中山9R","阪神10R","中山10R","阪神11R","中山11R"],
+"2026-09-19":["中山9R","阪神10R","中山10R","阪神11R","中山11R"],
+"2026-09-20":["中山9R","阪神10R","中山10R","阪神11R","中山11R"],
+"2026-09-21":["阪神9R","中山10R","阪神10R","中山11R","阪神11R"]
+};
+let state=[];
+let currentProfile=null;
+
+function safeProfileId(s){return String(s||"").trim().replace(/[^a-zA-Z0-9_\-ぁ-んァ-ヶ一-龠々ー ]/g,"").slice(0,30)}
+function profileList(){try{return JSON.parse(localStorage.getItem("win5_profiles")||"[]")}catch(e){return []}}
+function saveProfileList(v){localStorage.setItem("win5_profiles",JSON.stringify(v))}
+function keyForDate(){return "win5_saved_"+currentProfile+"_"+document.getElementById("date").value}
+function legacyKeyForDate(){return "win5_saved_"+document.getElementById("date").value}
+function getSaved(){try{return JSON.parse(localStorage.getItem(keyForDate())||"[]")}catch(e){return []}}
+function putSaved(v){localStorage.setItem(keyForDate(),JSON.stringify(v));updateSavedInfo()}
+function migrateLegacyForProfile(profile){
+  const keys=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(/^win5_saved_\d{4}-\d{2}-\d{2}$/.test(k||"")) keys.push(k);
+  }
+  keys.forEach(k=>{
+    const datePart=k.replace("win5_saved_","");
+    const dest="win5_saved_"+profile+"_"+datePart;
+    if(!localStorage.getItem(dest)){
+      const val=localStorage.getItem(k);
+      if(val) localStorage.setItem(dest,val);
+    }
+  });
+}
+
+function exportAllWin5Data(){
+  const data={version:12,exportedAt:new Date().toISOString(),items:{}};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k && (k.startsWith("win5_") || k.startsWith("win5_saved_"))){
+      data.items[k]=localStorage.getItem(k);
+    }
+  }
+  const text=JSON.stringify(data);
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>alert("保存データをコピーしました。新しいv9画面で「保存データを読み込む」を押してください。")).catch(()=>prompt("下のデータをコピーしてください。",text));
+  }else{
+    prompt("下のデータをコピーしてください。",text);
+  }
+}
+function importAllWin5Data(){
+  const text=prompt("以前の画面でコピーした保存データを貼り付けてください。");
+  if(!text)return;
+  try{
+    const data=JSON.parse(text);
+    if(!data.items || typeof data.items!=="object")throw new Error();
+    Object.entries(data.items).forEach(([k,v])=>{
+      if(k.startsWith("win5_") || k.startsWith("win5_saved_")) localStorage.setItem(k,v);
+    });
+    alert("保存データを読み込みました。");
+    showLogin();
+  }catch(e){
+    alert("データを読み込めませんでした。コピーした内容を確認してください。");
+  }
+}
+
+function showLogin(){
+  const profiles=profileList();
+  profileSelect.innerHTML=profiles.length?profiles.map(p=>`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join(""):`<option value="">IDを追加してください</option>`;
+  const last=localStorage.getItem("win5_last_profile");
+  if(last && profiles.includes(last)){
+    lastIdBtn.textContent=`前回使用したID「${last}」で開始`;
+    lastIdBtn.classList.remove("hidden");
+    profileSelect.value=last;
+  }else{
+    lastIdBtn.classList.add("hidden");
+  }
+  loginOverlay.classList.remove("hidden");
+}
+function startProfile(profile){
+  profile=safeProfileId(profile);
+  if(!profile){alert("IDを選択または追加してください。");return;}
+  currentProfile=profile;
+  localStorage.setItem("win5_last_profile",profile);
+  migrateLegacyForProfile(profile);
+  currentProfileLabel.textContent=profile;
+  loginOverlay.classList.add("hidden");
+  const lastDate=localStorage.getItem("win5_last_date_"+profile);
+  if(lastDate) date.value=lastDate;
+  loadLocal();
+}
+
+function updateSavedInfo(){
+  const s=getSaved();
+  const pts=s.reduce((a,x)=>a+x.points,0);
+  savedInfo.textContent=`保存済み ${s.length}口 ／ 合計 ${pts.toLocaleString()}点 ／ ¥${(pts*100).toLocaleString()}`;
+}
+function makeRace(i,title){
+  return {title:title||`対象レース${i+1}`,horses:Array.from({length:18},(_,x)=>({no:x+1,selected:false,odds:"-"}))};
+}
+function loadLocal(){
+  const d=date.value;
+  if(!d){alert("対象日を選択してください。");return;}
+  if(currentProfile) localStorage.setItem("win5_last_date_"+currentProfile,d);
+  const titles=schedule[d] || Array.from({length:5},(_,i)=>`対象レース${i+1}`);
+  state=titles.map((t,i)=>makeRace(i,t));
+  status.innerHTML=schedule[d]
+    ? `<strong>${d} の対象5レースを表示しました。</strong> 馬番を選択してください。`
+    : `<strong>${d} は対象レース名が未登録です。</strong> レース名を手入力して馬番を選択できます。`;
+  render(); updateSavedInfo();
+}
+function render(){
+  races.innerHTML="";
+  state.forEach((r,ri)=>{
+    const selected=r.horses.filter(h=>h.selected).length;
+    const el=document.createElement("section");
+    el.className="race";
+    el.id=`race-${ri}`;
+    el.innerHTML=`<div class="racehead">
+      <div class="badge">WIN5<br>${ri+1}</div>
+      <div class="rtitle">
+        <div class="raceTitleNav">
+          <input data-title="${ri}" value="${r.title}">
+          <div class="raceNavInline">
+            <button type="button" class="raceNavBtn prevRace" data-index="${ri}" ${ri===0?"disabled":""}>前へ</button>
+            <button type="button" class="raceNavBtn nextRace" data-index="${ri}" ${ri===state.length-1?"disabled":""}>次へ</button>
+          </div>
+        </div>
+      </div>
+      <div class="count">選択 ${selected}/10頭</div>
+    </div>
+    <div class="horses">${r.horses.map(h=>`
+      <div class="horse">
+        <input id="h${ri}_${h.no}" type="checkbox" data-r="${ri}" data-n="${h.no}" ${h.selected?"checked":""}>
+        <label for="h${ri}_${h.no}"><span class="no">${h.no}</span><span class="odds">単勝 ${h.odds}</span></label>
+      </div>`).join("")}</div>
+    <button class="clearRace" data-clear="${ri}">このレースをクリア</button>`;
+    races.appendChild(el);
+  });
+  races.querySelectorAll('input[type="checkbox"]').forEach(x=>x.addEventListener("change",e=>{
+    const ri=+e.target.dataset.r, no=+e.target.dataset.n;
+    const r=state[ri], h=r.horses.find(z=>z.no===no);
+    if(e.target.checked && r.horses.filter(z=>z.selected).length>=10){
+      e.target.checked=false; alert("1レース最大10頭までです。"); return;
+    }
+    h.selected=e.target.checked; render(); calc();
+  }));
+  races.querySelectorAll("[data-title]").forEach(x=>x.addEventListener("input",e=>state[+e.target.dataset.title].title=e.target.value));
+  races.querySelectorAll("[data-clear]").forEach(x=>x.addEventListener("click",()=>{
+    state[+x.dataset.clear].horses.forEach(h=>h.selected=false);render();calc();
+  }));
+  calc();
+}
+function currentCounts(){return state.map(r=>r.horses.filter(h=>h.selected).length)}
+function calc(){
+  const counts=currentCounts();
+  const p=(counts.length===5 && counts.every(n=>n>0))?counts.reduce((a,b)=>a*b,1):0;
+  const t=counts.reduce((a,b)=>a+b,0);
+  points.textContent=p.toLocaleString()+"点";
+  amount.textContent="¥"+(p*100).toLocaleString();
+  total.textContent=t+"頭";
+  bpoints.textContent=p.toLocaleString();
+  bamount.textContent=(p*100).toLocaleString();
+  return p;
+}
+function clearSelections(){
+  state.forEach(r=>r.horses.forEach(h=>h.selected=false));
+  render(); calc();
+}
+function saveCurrent(){
+  if(state.length!==5){alert("先に対象5レースを表示してください。");return;}
+  const counts=currentCounts();
+  if(!counts.every(n=>n>0)){alert("5レースすべてで、1頭以上選択してください。");return;}
+  const p=counts.reduce((a,b)=>a*b,1);
+  const saved=getSaved();
+  const ticket={
+    id:Date.now(),
+    date:date.value,
+    points:p,
+    amount:p*100,
+    races:state.map(r=>({
+      title:r.title,
+      horses:r.horses.filter(h=>h.selected).map(h=>({no:h.no,odds:h.odds}))
+    }))
+  };
+  saved.push(ticket);
+  putSaved(saved);
+  const n=saved.length;
+  clearSelections();
+  status.innerHTML=`<strong>${n}口目を保存しました。</strong> 次の買い目を選択してください。`;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function renderSaved(){
+  const saved=getSaved();
+  if(!saved.length){
+    savedBody.innerHTML='<div class="empty">この日付で保存した買い目はまだありません。</div>';
+    savedModal.classList.add("open"); return;
+  }
+  const totalPts=saved.reduce((a,x)=>a+x.points,0);
+  savedBody.innerHTML=`
+    <div class="savedSummary"><strong>${date.value}</strong><br>保存 ${saved.length}口 ／ 合計 ${totalPts.toLocaleString()}点 ／ 合計金額 ¥${(totalPts*100).toLocaleString()}</div>
+    ${saved.map((t,i)=>`
+      <div class="ticket">
+        <div class="tickethead"><div class="ticketnum">${i+1}口目</div><div class="ticketmeta">${t.points.toLocaleString()}点 ／ ¥${t.amount.toLocaleString()}</div></div>
+        <div class="ticketbody">
+          ${t.races.map((r,ri)=>`<div class="ticketRace"><div class="ticketRaceName">WIN5-${ri+1}<br>${escapeHtml(r.title)}</div><div class="nums">${r.horses.map(h=>h.no).join("・")}</div></div>`).join("")}
+        </div>
+        <div class="ticketfoot"><strong>${t.points.toLocaleString()}点</strong><div class="ticketActions"><button class="editBtn" data-edit="${t.id}">修正</button><button class="moveBtn" data-move="${t.id}">移動</button><button class="copyBtn" data-copy="${t.id}">コピーして新規作成</button><button class="del" data-del="${t.id}">この口を削除</button></div></div>
+      </div>`).join("")}
+    <button id="deleteAllSaved" class="danger">この日付の保存データをすべて削除</button>`;
+
+
+  savedBody.querySelectorAll("[data-move]").forEach(b=>b.addEventListener("click",()=>{
+    const savedNow=getSaved();
+    const fromIndex=savedNow.findIndex(x=>x.id===+b.dataset.move);
+    if(fromIndex<0)return;
+    const answer=prompt(`${fromIndex+1}口目を何口目へ移動しますか？\n1〜${savedNow.length}の数字を入力してください。`,String(fromIndex+1));
+    if(answer===null)return;
+    const toNumber=Number(answer);
+    if(!Number.isInteger(toNumber) || toNumber<1 || toNumber>savedNow.length){
+      alert(`1〜${savedNow.length}の数字を入力してください。`);
+      return;
+    }
+    const toIndex=toNumber-1;
+    if(toIndex===fromIndex)return;
+    const [ticket]=savedNow.splice(fromIndex,1);
+    savedNow.splice(toIndex,0,ticket);
+    putSaved(savedNow);
+    renderSaved();
+  }));
+
+  savedBody.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{
+    const srcTicket=getSaved().find(x=>x.id===+b.dataset.copy);
+    if(!srcTicket)return;
+    state=srcTicket.races.map((r,ri)=>{
+      const rr=makeRace(ri,r.title);
+      const nums=new Set(r.horses.map(h=>h.no));
+      rr.horses.forEach(h=>h.selected=nums.has(h.no));
+      return rr;
+    });
+    savedModal.classList.remove("open");
+    render(); calc();
+    status.innerHTML=`<strong>${getSaved().findIndex(x=>x.id===srcTicket.id)+1}口目をコピーしました。</strong> 必要な箇所を変更して「決定」を押すと、新しい買い目として保存されます。`;
+    window.scrollTo({top:0,behavior:"smooth"});
+  }));
+  savedBody.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>{
+    const ticket=getSaved().find(x=>x.id===+b.dataset.edit);
+    if(!ticket)return;
+    savedBody.innerHTML=`
+      <div class="savedSummary"><strong>${date.value}</strong><br>この買い目を修正します。</div>
+      <div class="editGrid">
+        ${ticket.races.map((r,ri)=>`
+          <div class="editRace">
+            <div class="editRaceTitle">WIN5-${ri+1} ${escapeHtml(r.title)}</div>
+            <div class="editHorses">
+              ${Array.from({length:18},(_,i)=>i+1).map(no=>`
+                <div class="editHorse">
+                  <input id="e_${ticket.id}_${ri}_${no}" type="checkbox" data-er="${ri}" data-en="${no}" ${r.horses.some(h=>h.no===no)?"checked":""}>
+                  <label for="e_${ticket.id}_${ri}_${no}">${no}</label>
+                </div>`).join("")}
+            </div>
+          </div>`).join("")}
+      </div>
+      <div class="editFooter"><button id="saveEdit" class="saveEdit">修正を保存</button><button id="cancelEdit" class="cancelEdit">キャンセル</button></div>`;
+    document.getElementById("cancelEdit").addEventListener("click",renderSaved);
+    document.getElementById("saveEdit").addEventListener("click",()=>{
+      const selected=ticket.races.map((r,ri)=>Array.from(savedBody.querySelectorAll(`input[data-er="${ri}"]:checked`)).map(x=>+x.dataset.en));
+      if(selected.some(a=>a.length===0)){alert("5レースすべてで1頭以上選択してください。");return;}
+      if(selected.some(a=>a.length>10)){alert("1レース最大10頭までです。");return;}
+      const counts=selected.map(a=>a.length);
+      ticket.races=ticket.races.map((r,ri)=>({...r,horses:selected[ri].map(no=>({no,odds:"-"}))}));
+      ticket.points=counts.reduce((a,b)=>a*b,1);
+      ticket.amount=ticket.points*100;
+      const all=getSaved().map(x=>x.id===ticket.id?ticket:x);
+      putSaved(all);
+      renderSaved();
+    });
+  }));
+
+  savedBody.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>{
+    if(!confirm("この買い目を削除しますか？"))return;
+    putSaved(getSaved().filter(x=>x.id!==+b.dataset.del));renderSaved();
+  }));
+  const da=document.getElementById("deleteAllSaved");
+  if(da)da.addEventListener("click",()=>{
+    if(!confirm("この日付の保存データをすべて削除しますか？"))return;
+    localStorage.removeItem(keyForDate());updateSavedInfo();renderSaved();
+  });
+  savedModal.classList.add("open");
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+
+load.addEventListener("click",loadLocal);
+date.addEventListener("change",loadLocal);
+clearAll.addEventListener("click",clearSelections);
+
+function forceAppUpdate(){
+  const u=new URL(location.href);
+  u.searchParams.set("v","15");
+  u.searchParams.set("reload",Date.now().toString());
+  location.replace(u.toString());
+}
+
+decide.addEventListener("click",saveCurrent);
+showSaved.addEventListener("click",renderSaved);
+decideBottom.addEventListener("click",saveCurrent);
+showSavedBottom.addEventListener("click",renderSaved);
+toTop.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+
+races.addEventListener("click",e=>{
+  const next=e.target.closest(".nextRace");
+  const prev=e.target.closest(".prevRace");
+  let targetIndex=null;
+  if(next) targetIndex=Number(next.dataset.index)+1;
+  if(prev) targetIndex=Number(prev.dataset.index)-1;
+  if(targetIndex!==null){
+    const el=document.getElementById(`race-${targetIndex}`);
+    if(el){
+      el.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+  }
+});
+
+forceUpdate.addEventListener("click",forceAppUpdate);
+switchId.addEventListener("click",showLogin);
+loginBtn.addEventListener("click",()=>startProfile(profileSelect.value));
+lastIdBtn.addEventListener("click",()=>{
+  const last=localStorage.getItem("win5_last_profile");
+  if(last) startProfile(last);
+});
+addIdBtn.addEventListener("click",()=>newIdArea.classList.toggle("hidden"));
+exportDataBtn.addEventListener("click",exportAllWin5Data);
+importDataBtn.addEventListener("click",importAllWin5Data);
+saveNewId.addEventListener("click",()=>{
+  const id=safeProfileId(newIdInput.value);
+  if(!id){alert("ID名を入力してください。");return;}
+  const profiles=profileList();
+  if(!profiles.includes(id)){profiles.push(id);saveProfileList(profiles)}
+  newIdInput.value="";
+  newIdArea.classList.add("hidden");
+  startProfile(id);
+});
+closeModal.addEventListener("click",()=>savedModal.classList.remove("open"));
+savedModal.addEventListener("click",e=>{if(e.target===savedModal)savedModal.classList.remove("open")});
+
+const now=new Date();
+date.value=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+
+// 初回はID選択画面を表示
+showLogin();
+const lastProfile=localStorage.getItem("win5_last_profile");
+if(lastProfile && profileList().includes(lastProfile)){
+  profileSelect.value=lastProfile;
+}
+
+
+</script>
+</body>
+</html>
